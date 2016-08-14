@@ -67,3 +67,8 @@ target/
 
 #Ipython Notebook
 .ipynb_checkpoints
+
+#Ignore all plugins except for the template
+!plugins/
+plugins/*
+!plugins/example_plugin/
