@@ -15,7 +15,12 @@ class OverwatchModule(object):
         self.name = name
 
     def start(self):
-        self.process = subprocess.Popen([sys.executable, "plugins/" + self.name + "/overwatch_plugin/plugin_starter.py"], shell=False)
+        path = sys.path[0] + '/plugins/' + self.name + '/'
+        self.process = subprocess.Popen(
+            [sys.executable, "plugins/" + self.name + "/overwatch_plugin_starter.py"],
+            shell=False,
+            env={'PYTHONPATH':path}
+        )
         print("Started " + self.name + " with ID " + str(self.process.pid))
 
     def stop(self):
@@ -34,8 +39,9 @@ class OverwatchModule(object):
     def get_response(self, path):
         try:
             return subprocess.check_output(
-                [sys.executable, "plugins/" + self.name + "/overwatch_plugin/data_provider.py", path], shell=False,
-                timeout=self.max_response_time)
+                [sys.executable, "plugins/" + self.name + "/overwatch_data_provider.py", path], shell=False,
+                timeout=self.max_response_time, env={'PATH':'/plugins/' + self.name + '/'}
+            )
         except subprocess.TimeoutExpired:
             self.is_dirty = True
             raise ValueError('the response to longer than permitted, ' + str(self.max_response_time))
