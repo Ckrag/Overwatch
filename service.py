@@ -4,11 +4,12 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import time
 import re
 import importlib
+import overwatch_module
 
 hostName = "localhost"
 hostPort = 9001
 
-modules = []
+modules = {}
 
 # Very inspired by http://stackoverflow.com/a/26652985
 
@@ -25,12 +26,25 @@ class LocalService(BaseHTTPRequestHandler):
 
         if path_components[0] == "module" and path_components[1] in modules:
 
-            module = importlib.import_module("plugins." + path_components[1] + ".plugger")
+            module = modules[path_components[1]]
+
+            if module.is_dirty:
+                return
+
+            # Here we convert the bytestring to regular string
+            # Then we can re-encode it with whatever
+
+            try:
+                # Getting a bytestring
+                response = str(module.get_response(self.path), 'utf-8')
+            except ValueError as err:
+                print(module.name + " response error: " + err)
+                return
 
             self.send_response(200)
             self.send_header("Content-type", "application/json")
             self.end_headers()
-            self.wfile.write(bytes(module.serve_response(self.path), "utf-8"))
+            self.wfile.write(bytes(response, "utf-8"))
 
     @staticmethod
     def get_clean_path(path):
@@ -44,11 +58,29 @@ class LocalService(BaseHTTPRequestHandler):
         return clean_components
 
 
-def run(module_list):
+def stop_plugins(plugins):
+    # http://stackoverflow.com/a/16867318
+    for name, plugin in plugins.items():
+        plugin.stop()
 
+
+def start_plugins(plugins):
+    for name, plugin in plugins.items():
+        plugin.start()
+
+
+def run(module_name_list):
+
+    # Get modules
     global modules
-    modules = module_list
 
+    for module_name in module_name_list:
+        modules[module_name] = overwatch_module.OverwatchModule(module_name)
+
+    # Start plugins
+    start_plugins(modules)
+
+    # Start shared service
     local_service = HTTPServer((hostName, hostPort), LocalService)
     print(time.asctime(), "Server Starts - %s:%s" % (hostName, hostPort))
 
@@ -58,4 +90,5 @@ def run(module_list):
         print("Server stopped, ..exiting")
 
     local_service.server_close()
+    stop_plugins(modules)
     print(time.asctime(), "Server Stops - %s:%s" % (hostName, hostPort))
