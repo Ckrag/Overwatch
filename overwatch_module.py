@@ -36,6 +36,18 @@ class OverwatchModule(object):
         except OSError:
             print("Terminated" + self.name + " with pid " + pid + " gracefully")
 
+    def get_gui_path(self):
+        try:
+            byte_path = subprocess.check_output(
+                [sys.executable, "plugins/" + self.name + "/overwatch_gui_provider.py"], shell=False,
+                timeout=self.max_response_time, env={'PATH': '/plugins/' + self.name + '/'}
+            )
+            return str(byte_path, "utf-8")
+
+        except subprocess.TimeoutExpired:
+            self.is_dirty = True
+            raise ValueError('the response to longer than permitted, ' + str(self.max_response_time))
+
     def get_response(self, path):
         try:
             return subprocess.check_output(
