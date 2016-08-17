@@ -19,7 +19,6 @@ class LocalService(SimpleHTTPRequestHandler):
 
     def do_GET(self):
 
-
         # special path for each plugin
         # canonical way of requesting data from plugin
         # EXPECTS BASEPATH/module/MODULE_NAME
@@ -74,7 +73,7 @@ class LocalService(SimpleHTTPRequestHandler):
                 return
 
             self.send_response(200)
-            self.send_header("Content-type", "application/json")
+            self.send_header("Content-type", "application/json") # SHOULD NOT RELY ON THIS HEADER
             self.end_headers()
             self.wfile.write(bytes(response, "utf-8"))
 
@@ -107,7 +106,6 @@ class LocalService(SimpleHTTPRequestHandler):
         for component in path_components:
             if component != "":
                 clean_components.append(component.replace("/", ""))
-
         return clean_components
 
 
