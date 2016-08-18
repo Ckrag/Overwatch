@@ -1,5 +1,5 @@
 .module_frame {
-    border:1px solid grey;
+    outline:1px solid grey;
     width:100%;
     display:block;
 }
