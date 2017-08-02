@@ -7,7 +7,10 @@ import sys
 import overwatch_module
 
 __hostName__ = "localhost"
-__hostPort__ = 9001
+__hostPort__ = 9002
+
+__path_html__ = "html"
+__path_plugins__ = "plugins"
 
 __plugins__ = {}
 __overwatch_gui_html__ = ""
@@ -36,7 +39,7 @@ class LocalService(SimpleHTTPRequestHandler):
             module_gui_paths = LocalService.get_clean_path(module.get_gui_path().rstrip())
 
             # change base
-            path_components[0] = "plugins"
+            path_components[0] = __path_plugins__
 
             # delete the gui keyword
             del path_components[2]
@@ -77,26 +80,22 @@ class LocalService(SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(bytes(response, "utf-8"))
 
-        elif len(path_components) >= 1 and path_components[0] == "overwatch":
 
-            if len(path_components) > 1:
-                # Something that isn't the generated front gui
-                # Let the lib figure things out, but alter the path
-                path = "/html"
-
-                for path_part in path_components[1:]:
-                    path += "/" + path_part
-
-                self.path = path
-                super().do_GET()
-
-            else:
+        # Everything not related to plugins (/modules/..) will go here
+        elif len(path_components) >= 1:
+            # If the GUI specifically is requested, do the contentswapping and generating to populate with plugins
+            if path_components[0].lower() == "overwatch":
                 # The front page
                 self.send_response(200)
                 self.send_header("Content-type", "text/html; charset=utf-8")
                 self.send_header("Content-length", str(len(__overwatch_gui_html__)))
                 self.end_headers()
                 self.wfile.write(bytes(__overwatch_gui_html__, "utf-8"))
+            else:
+                # All other resources just get piped to the html folder
+                self.path = __path_html__ + self.path
+                super().do_GET()
+
 
     @staticmethod
     def get_clean_path(path):
