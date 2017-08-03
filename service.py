@@ -7,7 +7,7 @@ import sys
 import overwatch_module
 
 __hostName__ = "localhost"
-__hostPort__ = 9002
+__hostPort__ = 9001
 
 __path_html__ = "html"
 __path_plugins__ = "plugins"
