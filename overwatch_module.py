@@ -46,7 +46,7 @@ class OverwatchModule(object):
 
         except subprocess.TimeoutExpired:
             self.is_dirty = True
-            raise ValueError('the response to longer than permitted, ' + str(self.max_response_time))
+            raise ValueError('the response is longer than permitted, ' + str(self.max_response_time))
 
     def get_response(self, path):
         try:
@@ -57,3 +57,6 @@ class OverwatchModule(object):
         except subprocess.TimeoutExpired:
             self.is_dirty = True
             raise ValueError('the response to longer than permitted, ' + str(self.max_response_time))
+
+    def is_web(self):
+        return self.get_gui_path()[:4] == "http"

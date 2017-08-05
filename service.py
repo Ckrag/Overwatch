@@ -5,6 +5,7 @@ import time
 import os
 import sys
 import overwatch_module
+import requests
 
 __hostName__ = "localhost"
 __hostPort__ = 9001
@@ -34,7 +35,6 @@ class LocalService(SimpleHTTPRequestHandler):
 
             if module.is_dirty:
                 return
-
 
             module_gui_paths = LocalService.get_clean_path(module.get_gui_path().rstrip())
 
@@ -118,7 +118,10 @@ def start_plugins(plugins):
     for name, plugin in plugins.items():
         plugin.start()
 
+
 def build_gui(plugins):
+
+    error = None
 
     with open(sys.path[0] + "/html/index.html", 'r') as html_template:
         base_html = html_template.read()
@@ -131,9 +134,27 @@ def build_gui(plugins):
     iframe_html_dom = ""
     for name, plugin in plugins.items():
 
-        path = "//" + __hostName__ + ":" + str(__hostPort__) + "/module/" + plugin.name + "/gui/"
+        # Skip the example
+        if name == "example_plugin":
+            continue
+
+        if plugin.is_web():
+
+            path = plugin.get_gui_path()
+
+
+            # check if open web url. First sign will always be a /, since it's supposed to handle relative paths
+            if path[:4] != "http":
+                error = "Web url has to be fully qualified: http://www...."
+
+            path = plugin.get_gui_path()
+        else:
+            path = "//" + __hostName__ + ":" + str(__hostPort__) + "/module/" + plugin.name + "/gui/"
 
         iframe_html_dom += snippet_html.replace("{{SRC}}", path)
+
+        # Added error text
+        iframe_html_dom.replace("{{ERRROR}}", error if error is not None else "")
 
     return base_html.replace("{{DATA}}", iframe_html_dom)
 
